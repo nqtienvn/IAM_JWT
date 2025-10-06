@@ -27,7 +27,7 @@ public class UserServiceImpl implements UserService {
             throw new RuntimeException("Email is existed");
         }
         User user = userMapper.toUser(userRegisterRequest);
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setPass(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         return userMapper.toUserRegisterResponseInformation(user);
     }

@@ -8,8 +8,8 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
-#
-#jwt:
-#  secret: "NqoOR/41C1WWFKRKKX8+/E7V8VBepn+/pmFwfKP0GDOuVuwgtBslCeu3swN0KGp8nPYv/wEiLrc2z0Qra0uptOtJAFVOS+7Vju2sHbUae1U="
-#
-#  expiration: 3600000
+
+jwt:
+  secret: "NqoOR/41C1WWFKRKKX8+/E7V8VBepn+/pmFwfKP0GDOuVuwgtBslCeu3swN0KGp8nPYv/wEiLrc2z0Qra0uptOtJAFVOS+7Vju2sHbUae1U="
+
+  expiration: 3600000

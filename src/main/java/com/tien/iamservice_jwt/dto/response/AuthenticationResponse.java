@@ -1,4 +1,4 @@
-package com.tien.iamservice_jwt.dto.request;
+package com.tien.iamservice_jwt.dto.response;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -10,11 +10,7 @@ import lombok.experimental.FieldDefaults;
 @AllArgsConstructor
 @NoArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class UserRegisterRequest {
-    String lastName;
-    String firstName;
-    String email;
-    String pass;
-    String profilePicture;
-    String phoneNumber;
+public class AuthenticationResponse {
+    String token;
+    boolean checkLogin;
 }
