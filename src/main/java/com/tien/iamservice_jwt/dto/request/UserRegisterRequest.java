@@ -14,7 +14,7 @@ public class UserRegisterRequest {
     String lastName;
     String firstName;
     String email;
-    String password;
+    String pass;
     String profilePicture;
     String phoneNumber;
 }
