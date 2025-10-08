@@ -5,4 +5,5 @@ import com.tien.iamservice_jwt.dto.response.AuthenticationResponse;
 
 public interface AuthenticationService {
     AuthenticationResponse login(AuthenticationRequest authenticationRequest);
+    AuthenticationResponse logout(String token);
 }

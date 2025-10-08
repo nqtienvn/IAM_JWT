@@ -1,8 +1,17 @@
 spring:
+  sendgrid:
+    api-key: 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
+    from-email: quangtien18137@gmail.com
+
   datasource:
     url: jdbc:mysql://localhost:3306/IAM_JWT
     username: root
     password: root
+
+  data:
+    redis:
+      host: localhost
+      port: 63540
 
   jpa:
     hibernate:
@@ -11,5 +20,6 @@ spring:
 
 jwt:
   secret: "NqoOR/41C1WWFKRKKX8+/E7V8VBepn+/pmFwfKP0GDOuVuwgtBslCeu3swN0KGp8nPYv/wEiLrc2z0Qra0uptOtJAFVOS+7Vju2sHbUae1U="
-
   expiration: 3600000
+
+

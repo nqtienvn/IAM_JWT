@@ -1,5 +1,6 @@
 package com.tien.iamservice_jwt.config;
 
+import com.cloudinary.Api;
 import com.tien.iamservice_jwt.service.impl.CustomeUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +13,10 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
@@ -22,13 +24,18 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurtityConfig {
     private final PasswordEncoder passwordEncoder;
     private final CustomeUserDetailService userDetailsService;
+    private final JwtAuthenticationFilter jwtAuthFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                .requestMatchers(HttpMethod.POST, "/api/users", "/auth/login")
-                .permitAll()
-                .anyRequest()
-                .authenticated())
+                .requestMatchers(HttpMethod.POST, "/api/users", "/auth/login", "/api/users/avatar").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/upload", "/send-mail").permitAll()
+                        .anyRequest()
+                        .authenticated())
+                        .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                        .sessionManagement
+                        (session -> session
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .csrf(AbstractHttpConfigurer::disable);
         return http.build();
     }

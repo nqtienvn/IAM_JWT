@@ -1,7 +1,9 @@
 package com.tien.iamservice_jwt.service.impl;
 
 import com.tien.iamservice_jwt.config.JwtProperties;
+import com.tien.iamservice_jwt.repository.RedisRepository;
 import com.tien.iamservice_jwt.service.JwtService;
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -16,20 +18,75 @@ import java.security.Key;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtServiceImpl implements JwtService {
     JwtProperties jwtProperties;
+    RedisRepository redisRepository;
     public Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
     @Override
-    public String generateToken(UserDetails userDetails) {
+    public String generateAccessToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
+
+    @Override
+    public String generateRefreshToken(UserDetails userDetails) {
+        return Jwts
+                .builder()
+                .id(UUID.randomUUID().toString())
+                .setSubject(userDetails.getUsername())
+                .setIssuedAt(new Date(System.currentTimeMillis()))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7))
+                .signWith(getSignKey(), SignatureAlgorithm.HS512)
+                .compact();
+    }
+    @Override
+    public boolean validateToken(String token, UserDetails useDetails) {
+        String email = extractEmail(token);
+        String id = extracId(token);
+        if(redisRepository.findById(id).isPresent()) {
+            return false;
+        }
+        return (email.equals(useDetails.getUsername())) && !isTokenExpired(token);
+    }
+    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
+        Claims claims = extractAllClaims(token);
+        return claimsResolver.apply(claims);
+    }
+
+    private Claims extractAllClaims(String token) {
+        return Jwts
+                .parser()
+                .setSigningKey(getSignKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+    @Override
+    public boolean isTokenExpired(String token) {
+        return extractExpiration(token).before(new Date());
+    }
+    @Override
+    public Date extractExpiration(String token) {
+        return extractClaim(token, Claims::getExpiration);
+    }
+    @Override
+    public String extractEmail(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    @Override
+    public String extracId(String token) {
+        return extractClaim(token, Claims::getId);
+    }
+
     public String generateToken(
             Map<String, Object> extraClaims, //gắn thành phần theme vào trong JWT
             UserDetails userDetails
@@ -37,10 +94,12 @@ public class JwtServiceImpl implements JwtService {
         return Jwts
                 .builder()
                 .setClaims(extraClaims)
+                .id(UUID.randomUUID().toString())
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 30))
                 .signWith(getSignKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
+
 }
