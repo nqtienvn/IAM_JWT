@@ -1,6 +1,6 @@
 spring:
   sendgrid:
-    api-key: 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
+    api-key:
     from-email: quangtien18137@gmail.com
 
   datasource:
