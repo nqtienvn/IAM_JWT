@@ -1,6 +1,6 @@
 package com.tien.iamservice_jwt.config;
 
-import com.tien.iamservice_jwt.service.impl.CustomeUserDetailService;
+import com.tien.iamservice_jwt.service.impl.CustomUserDetailService;
 import com.tien.iamservice_jwt.service.impl.JwtServiceImpl;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,6 +10,7 @@ import lombok.AccessLevel;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,13 +23,14 @@ import java.io.IOException;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 @RequiredArgsConstructor
+@Slf4j
 //OncePerRequestFilter cho biết là bọo lọc này chỉ được thực hiẹn 1 lần
 //tránh để ta xác thực, kiểm trả JWT nhiều lần trươc khi vào Filter khác, servlet
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     //logic authentication
     JwtServiceImpl jwtService;
     //lớp implements customerUserDetail service để triển khai UserDetailsService
-    CustomeUserDetailService customerUserDetailService;
+    CustomUserDetailService customerUserDetailService;
 
     //đây là lớp filter
     @Override
@@ -75,6 +77,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request)); //thêm những thứ còn lại ở request
                 //Gắn thêm chi tiết từ request (ví dụ: IP, session ID, User-Agent...).
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                log.info(SecurityContextHolder.getContext().getAuthentication().getName());
             }
         }
         //nếu mà nó chưa có token thì sẽ 403 hoạc đã xác thực thì chuyển qua controller luôn

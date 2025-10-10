@@ -9,11 +9,12 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class CustomeUserDetailService implements UserDetailsService {
+public class CustomUserDetailService implements UserDetailsService {
     private final UserRepository userRepository;
+
     @Override
     //hàm thể hiện là dùng thằng UserDetailsService để lấy từ db và trả về thăng UserDetail đó
     public UserDetails loadUserByUsername(String name) throws UsernameNotFoundException {
-        return userRepository.findUserByEmailIs(name).orElseThrow(() ->  new UsernameNotFoundException(name));
+        return userRepository.findUserByEmailIs(name).orElseThrow(() -> new UsernameNotFoundException(name));
     }
 }

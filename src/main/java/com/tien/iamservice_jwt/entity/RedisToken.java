@@ -20,4 +20,6 @@ public class RedisToken {
     @TimeToLive(unit = TimeUnit.MILLISECONDS) //chi dinh thoi gian song theo ngay
     //chi ding ttl cho redis de tu dong xoa neu het han
     private long expired;
+    private String type;
+    private String subject;
 }

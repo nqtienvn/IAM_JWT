@@ -1,14 +1,16 @@
 package com.tien.iamservice_jwt.controller;
 
 import com.tien.iamservice_jwt.dto.request.UserRegisterRequest;
+import com.tien.iamservice_jwt.dto.response.ApiResponse;
 import com.tien.iamservice_jwt.dto.response.UserRegisterResponseInformation;
+import com.tien.iamservice_jwt.exception.AppException;
+import com.tien.iamservice_jwt.exception.ErrorCode;
 import com.tien.iamservice_jwt.service.SendMailService;
 import com.tien.iamservice_jwt.service.UserService;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,8 +24,9 @@ import java.util.List;
 public class UserController {
     UserService userService;
     SendMailService sendMailService;
+
     @PostMapping
-    public ResponseEntity<UserRegisterResponseInformation> register(
+    public ApiResponse<UserRegisterResponseInformation> register(
             @RequestBody UserRegisterRequest userRegisterRequest) {
         try {
             UserRegisterResponseInformation response =
@@ -37,23 +40,41 @@ public class UserController {
             } catch (Exception mailEx) {
                 log.info("Không thể gửi email xác nhận: " + mailEx.getMessage());
             }
-            return ResponseEntity.ok(response);
+            return ApiResponse.<UserRegisterResponseInformation>builder()
+                    .code(200)
+                    .message("success")
+                    .result(response)
+                    .build();
         } catch (Exception e) {
             log.info("email is existed");
-            return ResponseEntity.badRequest().body(new UserRegisterResponseInformation());
+            throw new AppException(ErrorCode.INVALID_EMAIL);
         }
     }
 
     @GetMapping
-    public ResponseEntity<List<UserRegisterResponseInformation>> getAll() {
-        return ResponseEntity.ok(userService.getAll());
+    public ApiResponse<List<UserRegisterResponseInformation>> getAll() {
+        return ApiResponse.<List<UserRegisterResponseInformation>>builder()
+                .code(200)
+                .message("success")
+                .result(userService.getAll())
+                .build();
     }
-    @GetMapping("/my-infor")
-    public ResponseEntity<UserRegisterResponseInformation> getMyInfor() {
-        return ResponseEntity.ok(userService.getMyInfor());
+
+    @GetMapping("/my-info")
+    public ApiResponse<UserRegisterResponseInformation> getMyInfo() {
+        return ApiResponse.<UserRegisterResponseInformation>builder()
+                .code(200)
+                .message("success")
+                .result(userService.getMyInfor())
+                .build();
     }
+
     @PostMapping("/avatar")
-    public ResponseEntity<UserRegisterResponseInformation> uploadProfilePicture(@RequestParam MultipartFile file, @RequestParam String mail) {
-        return ResponseEntity.ok(userService.uploadProfile(file, mail));
+    public ApiResponse<UserRegisterResponseInformation> uploadProfilePicture(@RequestParam MultipartFile file, @RequestParam String mail) {
+        return ApiResponse.<UserRegisterResponseInformation>builder()
+                .code(200)
+                .message("success")
+                .result(userService.uploadProfile(file, mail))
+                .build();
     }
 }

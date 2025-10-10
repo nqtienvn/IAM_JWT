@@ -3,6 +3,8 @@ package com.tien.iamservice_jwt.service.impl;
 import com.tien.iamservice_jwt.dto.request.UserRegisterRequest;
 import com.tien.iamservice_jwt.dto.response.UserRegisterResponseInformation;
 import com.tien.iamservice_jwt.entity.User;
+import com.tien.iamservice_jwt.exception.AppException;
+import com.tien.iamservice_jwt.exception.ErrorCode;
 import com.tien.iamservice_jwt.mapper.UserMapper;
 import com.tien.iamservice_jwt.repository.UserRepository;
 import com.tien.iamservice_jwt.service.CloudinaryService;
@@ -17,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +34,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserRegisterResponseInformation register(UserRegisterRequest userRegisterRequest) {
         if (userRepository.existsUserByEmail(userRegisterRequest.getEmail())) {
-            throw new RuntimeException("Email is existed");
+            throw new AppException(ErrorCode.INVALID_EMAIL);
         }
         User user = userMapper.toUser(userRegisterRequest);
         user.setPass(passwordEncoder.encode(user.getPassword()));
@@ -55,19 +56,19 @@ public class UserServiceImpl implements UserService {
     public UserRegisterResponseInformation getMyInfor() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String email = authentication.getName();
-        User user = userRepository.findUserByEmailIs(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findUserByEmailIs(email).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         return userMapper.toUserRegisterResponseInformation(user);
     }
 
     @Override
     public UserRegisterResponseInformation uploadProfile(MultipartFile image, String mail) {
-        User user = userRepository.findUserByEmailIs(mail).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findUserByEmailIs(mail).orElseThrow(() -> new AppException(ErrorCode.USER_NOT_FOUND));
         try {
-                String imageUrl = cloudinaryService.uploadAvatar(image);
-                user.setProfilePicture(imageUrl);
+            String imageUrl = cloudinaryService.uploadAvatar(image);
+            user.setProfilePicture(imageUrl);
             return userMapper.toUserRegisterResponseInformation(userRepository.save(user));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to upload course media", e);
+            throw new AppException(ErrorCode.ERROR_UPLOAD_FILE);
         }
     }
 }

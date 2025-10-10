@@ -1,7 +1,6 @@
 package com.tien.iamservice_jwt.config;
 
-import com.cloudinary.Api;
-import com.tien.iamservice_jwt.service.impl.CustomeUserDetailService;
+import com.tien.iamservice_jwt.service.impl.CustomUserDetailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,12 +22,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @RequiredArgsConstructor
 public class SecurtityConfig {
     private final PasswordEncoder passwordEncoder;
-    private final CustomeUserDetailService userDetailsService;
+    private final CustomUserDetailService userDetailsService;
     private final JwtAuthenticationFilter jwtAuthFilter;
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
-                .requestMatchers(HttpMethod.POST, "/api/users", "/auth/login", "/api/users/avatar").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/users", "/auth/login", "auth/refresh-token", "auth/forgot-password", "auth/confirm-password", "/api/users/avatar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/upload", "/send-mail").permitAll()
                         .anyRequest()
                         .authenticated())

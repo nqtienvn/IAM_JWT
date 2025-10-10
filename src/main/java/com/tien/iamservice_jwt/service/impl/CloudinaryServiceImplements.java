@@ -2,6 +2,8 @@ package com.tien.iamservice_jwt.service.impl;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.tien.iamservice_jwt.exception.AppException;
+import com.tien.iamservice_jwt.exception.ErrorCode;
 import com.tien.iamservice_jwt.service.CloudinaryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class CloudinaryServiceImplements implements CloudinaryService {
     private final Cloudinary cloudinary;
+
     @Override
     public String uploadAvatar(MultipartFile file) throws IOException {
         assert file.getOriginalFilename() != null;
@@ -27,7 +30,7 @@ public class CloudinaryServiceImplements implements CloudinaryService {
         String publicValue = generatePublicValue(file.getOriginalFilename()); //lay cai ten anh
         String extension = getFileName(file.getOriginalFilename())[1];//lay e cai duoi cua anh
         File fileUpload = convert(file, publicValue, extension); //convert de thanh cai file
-        try{
+        try {
             cloudinary.uploader().upload(
                     fileUpload,
                     ObjectUtils.asMap(
@@ -37,27 +40,31 @@ public class CloudinaryServiceImplements implements CloudinaryService {
             );
             return cloudinary.url().resourceType("image").generate(publicValue + "." + extension);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AppException(ErrorCode.ERROR_UPLOAD_FILE);
         } finally {
             cleanDisk(fileUpload);
         }
     }
+
     private File convert(MultipartFile file, String publicValue, String extension) {
         File convFile = new File(publicValue + "." + extension);
-        try(InputStream inputStream = file.getInputStream()) {
+        try (InputStream inputStream = file.getInputStream()) {
             Files.copy(inputStream, convFile.toPath());
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AppException(ErrorCode.ERROR_UPLOAD_FILE);
         }
         return convFile;
     }
+
     public String generatePublicValue(String originalFilename) {
         String fileName = getFileName(originalFilename)[0];
         return UUID.randomUUID() + "_" + fileName;
     }
+
     public String[] getFileName(String originalFilename) {
         return originalFilename.split("\\.");
     }
+
     private void cleanDisk(File file) {
         try {
             Path filePath = file.toPath();

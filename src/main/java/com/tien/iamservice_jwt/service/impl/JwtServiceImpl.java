@@ -1,16 +1,17 @@
 package com.tien.iamservice_jwt.service.impl;
 
 import com.tien.iamservice_jwt.config.JwtProperties;
+import com.tien.iamservice_jwt.exception.AppException;
+import com.tien.iamservice_jwt.exception.ErrorCode;
 import com.tien.iamservice_jwt.repository.RedisRepository;
 import com.tien.iamservice_jwt.service.JwtService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -23,14 +24,18 @@ import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j(topic = "Jwt_service")
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class JwtServiceImpl implements JwtService {
     JwtProperties jwtProperties;
     RedisRepository redisRepository;
+    CustomUserDetailService customerUserDetailService;
+
     public Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
         return Keys.hmacShaKeyFor(keyBytes);
     }
+
     @Override
     public String generateAccessToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
@@ -47,15 +52,17 @@ public class JwtServiceImpl implements JwtService {
                 .signWith(getSignKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
+
     @Override
     public boolean validateToken(String token, UserDetails useDetails) {
         String email = extractEmail(token);
         String id = extracId(token);
-        if(redisRepository.findById(id).isPresent()) {
+        if (redisRepository.findById(id).isPresent()) {
             return false;
         }
         return (email.equals(useDetails.getUsername())) && !isTokenExpired(token);
     }
+
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
@@ -69,14 +76,33 @@ public class JwtServiceImpl implements JwtService {
                 .parseClaimsJws(token)
                 .getBody();
     }
+
     @Override
     public boolean isTokenExpired(String token) {
         return extractExpiration(token).before(new Date());
     }
+
     @Override
     public Date extractExpiration(String token) {
         return extractClaim(token, Claims::getExpiration);
     }
+
+    @Override
+    public String refreshAcessToken(String refreshToken) {
+        try {
+            String id = extracId(refreshToken);
+            String email = extractEmail(refreshToken);//doan nay la no da ket hop ca validate token roi
+            if (!isTokenExpired(refreshToken) && redisRepository.findById(id).isPresent()) {
+                return generateAccessToken(customerUserDetailService.loadUserByUsername(email));
+            }
+            return null;
+        } catch (ExpiredJwtException e) {
+            throw new AppException(ErrorCode.EXPIRED_TOKEN);
+        } catch (JwtException e) {
+            throw new AppException(ErrorCode.UNVERIFY_TOKEN);
+        }
+    }
+
     @Override
     public String extractEmail(String token) {
         return extractClaim(token, Claims::getSubject);
@@ -101,5 +127,4 @@ public class JwtServiceImpl implements JwtService {
                 .signWith(getSignKey(), SignatureAlgorithm.HS512)
                 .compact();
     }
-
 }

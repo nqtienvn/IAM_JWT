@@ -12,4 +12,5 @@ public interface JwtService {
     String extracId(String token);
     boolean isTokenExpired(String token);
     Date extractExpiration(String token);
+    String refreshAcessToken(String refreshToken);
 }
