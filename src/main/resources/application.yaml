@@ -11,7 +11,7 @@ spring:
   data:
     redis:
       host: localhost
-      port: 61911
+      port: 65213
 
   jpa:
     hibernate:

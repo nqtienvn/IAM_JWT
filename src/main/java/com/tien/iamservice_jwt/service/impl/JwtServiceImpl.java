@@ -4,6 +4,7 @@ import com.tien.iamservice_jwt.config.JwtProperties;
 import com.tien.iamservice_jwt.exception.AppException;
 import com.tien.iamservice_jwt.exception.ErrorCode;
 import com.tien.iamservice_jwt.repository.RedisRepository;
+import com.tien.iamservice_jwt.service.BaseRedisV2Service;
 import com.tien.iamservice_jwt.service.JwtService;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
@@ -30,6 +31,7 @@ public class JwtServiceImpl implements JwtService {
     JwtProperties jwtProperties;
     RedisRepository redisRepository;
     CustomUserDetailService customerUserDetailService;
+    BaseRedisV2Service baseRedisV2Service;
 
     public Key getSignKey() {
         byte[] keyBytes = Decoders.BASE64.decode(jwtProperties.getSecret());
@@ -57,7 +59,8 @@ public class JwtServiceImpl implements JwtService {
     public boolean validateToken(String token, UserDetails useDetails) {
         String email = extractEmail(token);
         String id = extracId(token);
-        if (redisRepository.findById(id).isPresent()) {
+        Object accessToken = baseRedisV2Service.get(id);
+        if (accessToken != null) {
             return false;
         }
         return (email.equals(useDetails.getUsername())) && !isTokenExpired(token);
@@ -92,10 +95,13 @@ public class JwtServiceImpl implements JwtService {
         try {
             String id = extracId(refreshToken);
             String email = extractEmail(refreshToken);//doan nay la no da ket hop ca validate token roi
-            if (!isTokenExpired(refreshToken) && redisRepository.findById(id).isPresent()) {
+            log.info("id: " + id);
+            log.info("id in redis: " + baseRedisV2Service.get("refreshToken"));
+            if (!isTokenExpired(refreshToken) && baseRedisV2Service.get("refreshToken") != null && baseRedisV2Service.get("refreshToken").toString().equals(id)) {
+                log.info(generateAccessToken(customerUserDetailService.loadUserByUsername(email)));
                 return generateAccessToken(customerUserDetailService.loadUserByUsername(email));
             }
-            return null;
+            throw new AppException(ErrorCode.UNVERIFY_TOKEN);
         } catch (ExpiredJwtException e) {
             throw new AppException(ErrorCode.EXPIRED_TOKEN);
         } catch (JwtException e) {

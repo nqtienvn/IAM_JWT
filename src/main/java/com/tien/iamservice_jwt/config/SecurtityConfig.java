@@ -28,7 +28,7 @@ public class SecurtityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(authorizeRequests -> authorizeRequests
                 .requestMatchers(HttpMethod.POST, "/api/users", "/auth/login", "auth/refresh-token", "auth/forgot-password", "auth/confirm-password", "/api/users/avatar").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/upload", "/send-mail").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/upload", "/send-mail", "redis/**").permitAll()
                         .anyRequest()
                         .authenticated())
                         .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

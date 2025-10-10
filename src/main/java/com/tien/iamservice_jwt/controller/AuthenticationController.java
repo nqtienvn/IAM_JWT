@@ -53,11 +53,13 @@ public class AuthenticationController {
     }
 
     @PostMapping("/change-password")
-    public ApiResponse<ChangePassWordResponse> changePassWord(@RequestBody ChangePassWordRequest changePassWordRequest) {
+    public ApiResponse<ChangePassWordResponse> changePassWord(@RequestBody ChangePassWordRequest changePassWordRequest,
+                                                              @RequestHeader("Authorization") String bearertoken) {
+        String token = bearertoken.substring(7);
         return ApiResponse.<ChangePassWordResponse>builder()
                 .code(200)
                 .message("success")
-                .result(authenticationService.changePassword(changePassWordRequest))
+                .result(authenticationService.changePassword(changePassWordRequest, token))
                 .build();
     }
 
